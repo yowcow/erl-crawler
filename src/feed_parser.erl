@@ -19,7 +19,6 @@ parse_item([], Parsed) -> Parsed;
 parse_item([Item | Rem], Parsed) ->
     Title = content_value(xmerl_xpath:string("//title", Item)),
     Link = content_value(xmerl_xpath:string("//link", Item)),
-    lager:info("title: ~ts, link: ~ts", [Title, Link]),
     parse_item(Rem, [{Title, Link} | Parsed]).
 
 content_value([Elem | _]) ->

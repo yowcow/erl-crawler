@@ -1,4 +1,4 @@
-{application, erl_http,
+{application, crawler_app,
  [{description, "An OTP library"},
   {vsn, "0.1.0"},
   {registered, []},
@@ -12,6 +12,7 @@
     lager
    ]},
   {env,[]},
+  {mod, {crawler_app, []}}, % this is important
   {modules, []},
 
   {licenses, ["Apache 2.0"]},

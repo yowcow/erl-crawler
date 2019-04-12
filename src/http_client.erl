@@ -4,7 +4,7 @@
     get_multi/1
 ]).
 
--define(TIMEOUT_MSEC, 300).
+-define(TIMEOUT_MSEC, 200).
 
 get_multi(Urls) ->
     {Count, Reqs} = request(Urls),
@@ -22,10 +22,10 @@ retrieve(Count, Reqs, Feeds) ->
             retrieve(Count - 1, Reqs, [Body | Feeds]);
         {http, {ReqId, {{_, Code, _}, _, _}}} ->
             Url = proplists:get_value(ReqId, Reqs),
-            lager:info("Got response NG: ~ts (~p)", [Url, Code]),
+            lager:error("Got response NG: ~ts (~p)", [Url, Code]),
             retrieve(Count - 1, Reqs, Feeds)
         after ?TIMEOUT_MSEC ->
-            lager:info("Giving up response for ~p requests", [Count]),
+            lager:error("Giving up response after ~p ms for ~p requests", [?TIMEOUT_MSEC, Count]),
             retrieve(0, Reqs, Feeds)
     end.
 
