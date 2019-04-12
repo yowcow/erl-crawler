@@ -17,3 +17,5 @@ Shell
 -----
 
     $ make shell
+    > application:start(crawler_app).
+    > application:stop(crawler_app).
