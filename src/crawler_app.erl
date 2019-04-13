@@ -4,7 +4,8 @@
 
 -export([
     start/2,
-    stop/1
+    stop/1,
+    config/1
 ]).
 
 start(_Type, _) ->
@@ -14,3 +15,6 @@ start(_Type, _) ->
 stop(_State) ->
     lager:stop(),
     ok.
+
+config(Key) ->
+    application:get_env(?MODULE, Key).

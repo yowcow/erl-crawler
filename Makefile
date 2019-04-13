@@ -12,8 +12,8 @@ test:
 release: _build/default/rel/crawler_app/crawler_app-0.1.0.tar.gz
 	mv $< .
 
-_build/default/rel/crawler_app/crawler_app-0.1.0.tar.gz:
-	$(REBAR) tar
+_build/%/rel/crawler_app/crawler_app-0.1.0.tar.gz:
+	$(REBAR) as $* tar
 
 clean:
 	-rm -rf _build *.tar.gz

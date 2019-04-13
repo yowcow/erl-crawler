@@ -7,10 +7,7 @@
 ]).
 
 start() ->
-    {ok, Host} = application:get_env(db, host),
-    {ok, User} = application:get_env(db, user),
-    {ok, Password} = application:get_env(db, password),
-    {ok, Database} = application:get_env(db, database),
+    {ok, {Host, Database, User, Password}} = crawler_app:config(db),
     {ok, Pid} = mysql:start_link([
         {host, Host},
         {user, User},
