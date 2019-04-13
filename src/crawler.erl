@@ -5,6 +5,7 @@
 -export([
     start_link/0,
     stop/0,
+    crawl/0,
     do/0
 ]).
 -export([
@@ -32,38 +33,44 @@ stop() ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    register(worker, spawn_link(fun() -> do_and_wait(?INTERVAL) end)),
-    lager:info("crawler started"),
+    register(crawler_worker, spawn_link(fun() -> crawl_loop(?INTERVAL) end)),
+    lager:info("crawler server initialized"),
     {ok, 0}.
 
 handle_call(_, _, N) ->
-    {reply, N, N + 1}.
+    Items = crawl(),
+    ok = log_item(Items),
+    {reply, Items, N + 1}.
 
 handle_cast(_, N) -> {noreply, N}.
 handle_info(_, N) -> {noreply, N}.
 
 terminate(_, _) ->
-    lager:info("crawler stopping ~p", [?MODULE]),
     process_flag(trap_exit, false),
-    Pid = whereis(worker),
+    Pid = whereis(crawler_worker),
     unlink(Pid),
     exit(Pid, shutdown), % unlink and kill
-    lager:info("crawler stopped"),
+    lager:info("crawler server terminated"),
     ok.
 
 code_change(_, N, _) -> {ok, N}.
 
-do_and_wait(N) ->
-    do(),
-    timer:sleep(N),
-    do_and_wait(N).
-
 do() ->
+    gen_server:call(?MODULE, [], 500).
+
+crawl() ->
+    lager:info("crawler started crawling"),
     Feeds = http_client:get_multi(?URLS),
     Items = feed_parser:parse_multi(Feeds),
-    ok = log_item(Items),
     lager:info("crawler finished crawling"),
-    ok.
+    Items.
+
+crawl_loop(Interval) ->
+    lager:info("crawler waiting"),
+    timer:sleep(Interval),
+    Items = crawl(),
+    log_item(Items),
+    crawl_loop(Interval).
 
 log_item([]) -> ok;
 log_item([{Title, Link} | Rem]) ->

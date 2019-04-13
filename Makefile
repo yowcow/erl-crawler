@@ -1,22 +1,19 @@
 REBAR := rebar3
-BIN := _build/default/bin/erl_http
 
 all:
 	$(REBAR) compile
-
-run: build
-	./$(BIN)
-
-build: $(BIN)
-
-$(BIN): src/*.erl
-	$(REBAR) escriptize
 
 shell:
 	$(REBAR) shell
 
 test:
 	$(REBAR) eunit
+
+release: _build/default/rel/crawler_app/crawler_app-0.1.0.tar.gz
+	mv $< .
+
+_build/default/rel/crawler_app/crawler_app-0.1.0.tar.gz:
+	$(REBAR) tar
 
 clean:
 	-rm -rf _build
