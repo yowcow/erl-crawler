@@ -16,6 +16,6 @@ _build/default/rel/crawler_app/crawler_app-0.1.0.tar.gz:
 	$(REBAR) tar
 
 clean:
-	-rm -rf _build
+	-rm -rf _build *.tar.gz
 
 .PHONY: all shell run test clean
