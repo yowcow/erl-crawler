@@ -39,7 +39,7 @@ init([]) ->
 
 handle_call(_, _, N) ->
     Items = crawl(),
-    ok = log_item(Items),
+    ok = insert_item(Items),
     {reply, Items, N + 1}.
 
 handle_cast(_, N) -> {noreply, N}.
@@ -62,17 +62,18 @@ crawl() ->
     lager:info("crawler started crawling"),
     Feeds = http_client:get_multi(?URLS),
     Items = feed_parser:parse_multi(Feeds),
+    ok = insert_item(Items),
     lager:info("crawler finished crawling"),
     Items.
 
 crawl_loop(Interval) ->
     lager:info("crawler waiting"),
     timer:sleep(Interval),
-    Items = crawl(),
-    log_item(Items),
+    _ = crawl(),
     crawl_loop(Interval).
 
-log_item([]) -> ok;
-log_item([{Title, Link} | Rem]) ->
-    lager:info("title: ~ts, link: ~ts", [Title, Link]),
-    log_item(Rem).
+insert_item(Items) ->
+    Pid = db:start(),
+    db:insert_ignore_multi(Pid, Items),
+    db:stop(Pid),
+    ok.

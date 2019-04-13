@@ -1,15 +1,16 @@
 all:
 
-start: var
+start: IMAGE := mysql:5.7
+start: _var
 	docker run -d --rm \
 		--name crawler-app-db \
 		--cidfile docker.cid \
 		-e MYSQL_ROOT_PASSWORD=hogehoge \
 		-v `pwd`/var:/var/lib/mysql:rw \
 		-p 3306:3306 \
-		mysql
+		$(IMAGE)
 
-var:
+_var:
 	mkdir -p $@
 
 stop:

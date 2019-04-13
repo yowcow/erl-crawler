@@ -12,4 +12,5 @@ start(_Type, _) ->
     crawler_sup:start_link().
 
 stop(_State) ->
+    lager:stop(),
     ok.

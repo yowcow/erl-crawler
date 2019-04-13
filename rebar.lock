@@ -3,6 +3,10 @@
  {<<"lager">>,
   {git,"git://github.com/erlang-lager/lager",
        {ref,"94f4cd5d4a6797727bee49e86ab1c1f60a039389"}},
+  0},
+ {<<"mysql">>,
+  {git,"git://github.com/mysql-otp/mysql-otp",
+       {ref,"9a98eff7a127a5012c45e4b8bd845b0befccf0a9"}},
   0}]}.
 [
 {pkg_hash,[
