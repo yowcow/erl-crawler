@@ -15,7 +15,7 @@ start() ->
         {database, Database}
     ]),
     lager:info("db connected: ~p", [Pid]),
-    Pid.
+    {ok, Pid}.
 
 stop(Pid) ->
     Ret = mysql:stop(Pid),
@@ -42,7 +42,7 @@ insert_ignore_multi(Pid, Items) ->
     insert_ignore_multi(Pid, Items, 0, 0).
 
 insert_ignore_multi(_, [], Inserted, Skipped) ->
-    {Inserted, Skipped};
+    {ok, {Inserted, Skipped}};
 insert_ignore_multi(Pid, [Item | L], Inserted, Skipped) ->
     case insert_ignore(Pid, Item) of
         ok -> insert_ignore_multi(Pid, L, Inserted + 1, Skipped);

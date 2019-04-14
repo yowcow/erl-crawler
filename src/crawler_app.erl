@@ -17,4 +17,4 @@ stop(_State) ->
     ok.
 
 config(Key) ->
-    application:get_env(?MODULE, Key).
+    application:get_env(crawler, Key).
