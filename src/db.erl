@@ -33,13 +33,18 @@ insert(Pid, {Title, Link}) ->
 insert_ignore(Pid, {Title, Link}) ->
     case count_by_link(Pid, Link) of
         {ok, 0} ->
-            lager:info("title: ~ts, link: ~ts", [Title, Link]),
             insert(Pid, {Title, Link});
         _ ->
             skip
     end.
 
-insert_ignore_multi(_, []) -> ok;
-insert_ignore_multi(Pid, [Item | L]) ->
-    insert_ignore(Pid, Item),
-    insert_ignore_multi(Pid, L).
+insert_ignore_multi(Pid, Items) ->
+    insert_ignore_multi(Pid, Items, 0, 0).
+
+insert_ignore_multi(_, [], Inserted, Skipped) ->
+    {Inserted, Skipped};
+insert_ignore_multi(Pid, [Item | L], Inserted, Skipped) ->
+    case insert_ignore(Pid, Item) of
+        ok -> insert_ignore_multi(Pid, L, Inserted + 1, Skipped);
+        _  -> insert_ignore_multi(Pid, L, Inserted, Skipped + 1)
+    end.

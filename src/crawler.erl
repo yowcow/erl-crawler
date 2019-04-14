@@ -5,15 +5,14 @@
 -export([
     start_link/0,
     stop/0,
-    crawl/0,
-    do/0
+    crawl/0
 ]).
 -export([
     init/1,
+    terminate/2,
     handle_call/3,
     handle_cast/2,
     handle_info/2,
-    terminate/2,
     code_change/3
 ]).
 
@@ -23,7 +22,7 @@
     "https://bo.beaconsco.com/fuga.txt",
     "http://blog.livedoor.jp/yakiusoku/index.rdf"
 ]).
--define(INTERVAL, 30 * 1000).
+-define(INTERVAL, 60 * 1000).
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
@@ -33,47 +32,42 @@ stop() ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    register(crawler_worker, spawn_link(fun() -> crawl_loop(?INTERVAL) end)),
+    register(notifier, spawn_link(fun() -> notifier(?INTERVAL) end)),
     lager:info("crawler server initialized"),
     {ok, 0}.
 
-handle_call(_, _, N) ->
-    Items = crawl(),
-    ok = insert_item(Items),
-    {reply, Items, N + 1}.
-
-handle_cast(_, N) -> {noreply, N}.
-handle_info(_, N) -> {noreply, N}.
-
 terminate(_, _) ->
     process_flag(trap_exit, false),
-    Pid = whereis(crawler_worker),
+    Pid = whereis(notifier),
     unlink(Pid),
     exit(Pid, shutdown), % unlink and kill
     lager:info("crawler server terminated"),
     ok.
 
-code_change(_, N, _) -> {ok, N}.
-
-do() ->
-    gen_server:call(?MODULE, [], 500).
-
-crawl() ->
+handle_call(crawl, _, N) ->
     lager:info("crawler started crawling"),
     Feeds = http_client:get_multi(?URLS),
     Items = feed_parser:parse_multi(Feeds),
-    ok = insert_item(Items),
-    lager:info("crawler finished crawling"),
-    Items.
+    {Inserted, Skipped} = insert_item(Items),
+    lager:info("crawler finished crawling (inserted: ~p, skipped: ~p)", [Inserted, Skipped]),
+    {reply, #{ inserted => Inserted, skipped => Skipped }, N + 1}.
 
-crawl_loop(Interval) ->
-    lager:info("crawler waiting"),
-    timer:sleep(Interval),
-    _ = crawl(),
-    crawl_loop(Interval).
+handle_cast(_, N) -> {noreply, N}.
+handle_info(_, N) -> {noreply, N}.
+
+code_change(_, N, _) -> {ok, N}.
+
+crawl() ->
+    gen_server:call(?MODULE, crawl, 1000).
 
 insert_item(Items) ->
     Pid = db:start(),
-    db:insert_ignore_multi(Pid, Items),
+    Ret = db:insert_ignore_multi(Pid, Items),
     db:stop(Pid),
-    ok.
+    Ret.
+
+notifier(Interval) ->
+    lager:info("crawler notifier waiting"),
+    timer:sleep(Interval),
+    crawl(),
+    notifier(Interval).
