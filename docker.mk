@@ -6,7 +6,7 @@ start: _var
 		--name crawler-app-db \
 		--cidfile docker.cid \
 		-e MYSQL_ROOT_PASSWORD=hogehoge \
-		-v `pwd`/var:/var/lib/mysql:rw \
+		-v `pwd`/$<:/var/lib/mysql:rw \
 		-p 3306:3306 \
 		$(IMAGE)
 
@@ -18,6 +18,6 @@ stop:
 	rm -f docker.cid
 
 clean:
-	rm -rf var
+	rm -rf _var
 
 .PHONY: all start stop clean
