@@ -19,7 +19,7 @@ parse_item([], Parsed) -> Parsed;
 parse_item([Item | Rem], Parsed) ->
     Title = content_value(xmerl_xpath:string("//title", Item)),
     Link = content_value(xmerl_xpath:string("//link", Item)),
-    parse_item(Rem, [{Title, Link} | Parsed]).
+    parse_item(Rem, [{string:trim(Title), string:trim(Link)} | Parsed]).
 
 content_value([Elem | _]) ->
     [Text | _] = Elem#xmlElement.content,
