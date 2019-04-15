@@ -7,20 +7,11 @@
 ]).
 
 start() ->
-    {ok, {Host, Database, User, Password}} = crawler_app:config(db),
-    {ok, Pid} = mysql:start_link([
-        {host, Host},
-        {user, User},
-        {password, Password},
-        {database, Database}
-    ]),
-    lager:info("db connected: ~p", [Pid]),
-    {ok, Pid}.
+    {ok, DSN} = crawler_app:config(db),
+    mysql:start_link(DSN).
 
 stop(Pid) ->
-    Ret = mysql:stop(Pid),
-    lager:info("db disconnected: ~p", [Pid]),
-    Ret.
+    mysql:stop(Pid).
 
 count_by_link(Pid, Link) ->
     {ok, _, [[Count]]} = mysql:query(Pid, "SELECT count(*) FROM item WHERE link = ?", [Link]),

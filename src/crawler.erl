@@ -31,17 +31,11 @@ stop() ->
     gen_server:stop(?MODULE).
 
 init([]) ->
-    process_flag(trap_exit, true),
-    Self = self(),
-    register(notifier, spawn_link(fun() -> notifier(Self, ?INTERVAL) end)),
+    erlang:send_after(?INTERVAL, self(), ping),
     lager:info("crawler server initialized"),
     {ok, 0}.
 
 terminate(_, _) ->
-    process_flag(trap_exit, false),
-    Pid = whereis(notifier),
-    unlink(Pid),
-    exit(Pid, shutdown), % unlink and kill
     lager:info("crawler server terminated"),
     ok.
 
@@ -57,6 +51,7 @@ handle_cast(_, N) ->
 
 handle_info(ping, N) ->
     crawl(),
+    erlang:send_after(?INTERVAL, self(), ping), %% invoke ping again
     {noreply, N};
 handle_info(_, N) ->
     {noreply, N}.
@@ -75,13 +70,12 @@ crawl() ->
     Ret.
 
 insert_item(Items) ->
-    {ok, Pid} = db:start(),
+    insert_item(db:start(), Items).
+
+insert_item({ok, Pid}, Items) ->
     {ok, Ret} = db:insert_ignore_multi(Pid, Items),
     db:stop(Pid),
-    Ret.
-
-notifier(Pid, Interval) ->
-    lager:info("crawler notifier waiting"),
-    timer:sleep(Interval),
-    Pid ! ping, % ping crawler via ipc
-    notifier(Pid, Interval).
+    Ret;
+insert_item(Ret, _) ->
+    lager:error("crawler failed connecting to db: ~p", [Ret]),
+    {0, 0}.
