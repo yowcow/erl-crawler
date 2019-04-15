@@ -1,5 +1,5 @@
-erl_http
-========
+erl-crawler
+===========
 
 Parallel HTTP client, RSS parser, and database writer.
 
